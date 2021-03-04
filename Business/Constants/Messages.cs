@@ -12,5 +12,6 @@ namespace Business.Constants
         public static string Listed = " Listelendi";
         public static string MaintenanceTime = "Sistem Bakımda";
         public static string CarNotReturned = "This car has already been chosen! Please choose a new car.";
+        public static string CarImageLimitError = "Bir arabanın en fazla 5 resmi olabilir!";
     }
 }

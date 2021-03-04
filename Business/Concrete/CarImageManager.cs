@@ -1,5 +1,6 @@
 ﻿using Business.Abstract;
 using Business.Constants;
+using Core.Utilities.Business;
 using Core.Utilities.Helpers;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
@@ -22,6 +23,12 @@ namespace Business.Concrete
 
         public IResult Add(IFormFile file, CarImage carImage)
         {
+            IResult result = BusinessRules.Run(CheckIfCarImageLimitOfCorrect(carImage.CarId));
+            if (result != null)
+            {
+                return result;
+            }
+
             carImage.ImagePath = FileHelper.Add(file);
             carImage.DateTime = DateTime.Now;
 
@@ -48,15 +55,45 @@ namespace Business.Concrete
 
         public IDataResult<CarImage> GetCarById(int id)
         {
-            throw new NotImplementedException();
+            return new SuccessDataResult<CarImage>(_carImageDal.Get(c => c.CarId == id));
         }
 
         public IResult Update(IFormFile file, CarImage carImage)
         {
+
+            IResult result = BusinessRules.Run(CheckIfCarImageLimitOfCorrect(carImage.CarId));
+            if (result != null)
+            {
+                return result;
+            }
+
             carImage.ImagePath = FileHelper.Update(_carImageDal.Get(c => c.ImageId == carImage.ImageId).ImagePath, file);
             carImage.DateTime = DateTime.Now;
             _carImageDal.Update(carImage);
             return new SuccessResult(Messages.Updated);
         }
+
+        //Business Rules
+        private IResult CheckIfCarImageLimitOfCorrect(int carId)
+        {
+            var result = _carImageDal.GetAll(c => c.ImageId == carId);
+            if (result.Count > 5)
+            {
+                return new ErrorResult(Messages.CarImageLimitError);
+            }
+            return new SuccessResult();
+        }
+        private List<CarImage> CheckIfCarImageNull(int carId)
+        {
+            string path = @"\wwwroot\Images\rentalcar.jpg";
+            var result = _carImageDal.GetAll(c => c.CarId == carId);
+            if (result.Count > 0)
+            {
+                return _carImageDal.GetAll(c => c.CarId == carId);
+            }
+            return new List<CarImage> { new CarImage { CarId = carId, ImagePath = path, DateTime = DateTime.Now } };
+        }
+
     }
 }
+
